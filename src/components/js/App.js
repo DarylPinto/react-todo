@@ -3,12 +3,17 @@ import '../css/App.css';
 
 //Constants
 const ENTER_KEY = 13;
-const VIEW_ALL = "all";
-const VIEW_ACTIVE = "active";
-const VIEW_COMPLETED = "completed";
+const VIEWS = {
+	VIEW_ALL: "all",
+	VIEW_ACTIVE: "active",
+	VIEW_COMPLETED: "completed"
+};
 
 //Utilities
 const clone = obj => JSON.parse(JSON.stringify(obj));
+const sentenceCase = str => str.split(" ")
+	.map(w => (w.length > 1) ? (w[0].toUpperCase()+w.substr(1)) : w.toUpperCase())
+	.join(" ");
 
 //Stateless Functional Components
 const TodoList = props => {
@@ -25,17 +30,15 @@ const TodoList = props => {
 };
 
 const ViewToggle = props => {
-	const {onViewChange} = props;
+	const {currentView, onViewChange} = props;
 	return (
-		<div id="view-toggle">	
-			<label htmlFor="view-all">All</label>
-			<input type="radio" id="view-all" name="currentView" value={VIEW_ALL} onChange={onViewChange} defaultChecked="checked" />
-
-			<label htmlFor="view-active">Active</label>
-			<input type="radio" id="view-active" name="currentView" value={VIEW_ACTIVE} onChange={onViewChange} />
-
-			<label htmlFor="view-completed">Completed</label>
-			<input type="radio" id="view-completed" name="currentView" value={VIEW_COMPLETED} onChange={onViewChange} />
+		<div id="view-toggle">
+			{Object.values(VIEWS).map(view => (
+				<label key={view}>
+					{sentenceCase(view)}
+					<input type="radio" name="currentView" value={view} onChange={onViewChange} checked={currentView === view} />
+				</label>
+			))}
 		</div>
 	);
 };
@@ -47,7 +50,7 @@ class App extends Component {
 		super(props);
 		this.state = {
 			newTodo: "",
-			currentView: "all",
+			currentView: VIEWS.VIEW_ALL,
 			todos: []
 		}
 	}
@@ -99,10 +102,10 @@ class App extends Component {
 		let shownTodos;
 
 		switch(currentView){
-			case VIEW_ACTIVE:
+			case VIEWS.VIEW_ACTIVE:
 				shownTodos = todos.filter(todo => !todo.completed);
 				break;
-			case VIEW_COMPLETED:
+			case VIEWS.VIEW_COMPLETED:
 				shownTodos = todos.filter(todo => todo.completed);
 				break;
 			default:
@@ -112,14 +115,12 @@ class App extends Component {
 		return (
 			<main>
 				<h1>To-do List</h1>
-				<input placeholder="What needs to be done?" autoFocus value={newTodo} onChange={this.handleChange} onKeyDown={this.handleKeyDown} />
+				<input type="text" placeholder="What needs to be done?" autoFocus value={newTodo} onChange={this.handleChange} onKeyDown={this.handleKeyDown} />
 				<TodoList todos={shownTodos} onTodoClick={this.toggleTodoComplete} />
 				<div className="control-panel">
-					<ViewToggle onViewChange={this.updateCurrentView} />
+					<ViewToggle currentView={currentView} onViewChange={this.updateCurrentView} />
 					<button type="button" onClick={this.completeAll}>Complete All</button>
-					{todos.some(todo => todo.completed) &&
-						<button type="button" onClick={this.clearCompleted}>Clear Completed</button>
-					}	
+					<button type="button" onClick={this.clearCompleted}>Clear Completed</button>
 				</div>
 			</main>
 		);
