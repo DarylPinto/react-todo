@@ -1,57 +1,26 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
+import TodoList from './TodoList';
+import ViewToggle from './ViewToggle';
+import {ENTER_KEY, VIEWS} from '../../constants/constants.js';
+import clone from '../../utilities/clone';
 import '../css/App.css';
 
-//Constants
-const ENTER_KEY = 13;
-const VIEWS = {
-	VIEW_ALL: "all",
-	VIEW_ACTIVE: "active",
-	VIEW_COMPLETED: "completed"
-};
-
-//Utilities
-const clone = obj => JSON.parse(JSON.stringify(obj));
-const sentenceCase = str => str.split(" ")
-	.map(w => (w.length > 1) ? (w[0].toUpperCase()+w.substr(1)) : w.toUpperCase())
-	.join(" ");
-
-//Stateless Functional Components
-const TodoList = props => {
-	const {todos, onTodoClick} = props;
-	return (
-		<ul>
-			{todos.map(todo => (
-				<li key={todo.id} onClick={() => onTodoClick(todo.id)} className={todo.completed ? "completed" : null}>
-					{todo.text}
-				</li>
-			))}
-		</ul>
-	);
-};
-
-const ViewToggle = props => {
-	const {currentView, onViewChange} = props;
-	return (
-		<div id="view-toggle">
-			{Object.values(VIEWS).map(view => (
-				<label key={view}>
-					{sentenceCase(view)}
-					<input type="radio" name="currentView" value={view} onChange={onViewChange} checked={currentView === view} />
-				</label>
-			))}
-		</div>
-	);
-};
-
-//Main Component
 class App extends Component {
 
-	constructor(props){
-		super(props);
-		this.state = {
-			newTodo: "",
-			currentView: VIEWS.VIEW_ALL,
-			todos: []
+	state = {
+		newTodo: "",
+		currentView: VIEWS.VIEW_ALL,
+		todos: []
+	}
+
+	//Getters
+	get shownTodos() {
+		const {currentView, todos} = this.state;
+
+		switch(currentView){
+			case VIEWS.VIEW_ACTIVE: return todos.filter(todo => !todo.completed);
+			case VIEWS.VIEW_COMPLETED: return todos.filter(todo => todo.completed);
+			default: return todos;
 		}
 	}
 
@@ -97,26 +66,13 @@ class App extends Component {
 	}
 
 	render() {
-
-		const {newTodo, currentView, todos} = this.state;
-		let shownTodos;
-
-		switch(currentView){
-			case VIEWS.VIEW_ACTIVE:
-				shownTodos = todos.filter(todo => !todo.completed);
-				break;
-			case VIEWS.VIEW_COMPLETED:
-				shownTodos = todos.filter(todo => todo.completed);
-				break;
-			default:
-				shownTodos = todos;
-		}
+		const {newTodo, currentView} = this.state;
 	
 		return (
 			<main>
 				<h1>To-do List</h1>
 				<input type="text" placeholder="What needs to be done?" autoFocus value={newTodo} onChange={this.handleChange} onKeyDown={this.handleKeyDown} />
-				<TodoList todos={shownTodos} onTodoClick={this.toggleTodoComplete} />
+				<TodoList todos={this.shownTodos} onTodoClick={this.toggleTodoComplete} />
 				<div className="control-panel">
 					<ViewToggle currentView={currentView} onViewChange={this.updateCurrentView} />
 					<button type="button" onClick={this.completeAll}>Complete All</button>
